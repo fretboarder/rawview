@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { commands } from '@/lib/tauri-bindings'
-import type { HistogramData } from '@/lib/tauri-bindings'
+import type { HistogramData } from '@/lib/bindings'
 import { useViewerStore } from '@/store/viewer-store'
 
 /**
@@ -31,30 +31,41 @@ export function useHistogram(): PerChannelHistograms | null {
     let cancelled = false
 
     const fetchAll = async () => {
-      const [rResult, g1Result, g2Result, bResult, combinedResult] = await Promise.all([
-        commands.getHistogram('R' as never),
-        commands.getHistogram('G1' as never),
-        commands.getHistogram('G2' as never),
-        commands.getHistogram('B' as never),
-        commands.getHistogram(null),
-      ])
+      try {
+        const [rResult, g1Result, g2Result, bResult, combinedResult] = await Promise.all([
+          commands.getHistogram('R'),
+          commands.getHistogram('G1'),
+          commands.getHistogram('G2'),
+          commands.getHistogram('B'),
+          commands.getHistogram(null),
+        ])
 
-      if (cancelled) return
+        if (cancelled) return
 
-      if (
-        rResult.status === 'ok' &&
-        g1Result.status === 'ok' &&
-        g2Result.status === 'ok' &&
-        bResult.status === 'ok' &&
-        combinedResult.status === 'ok'
-      ) {
-        setData({
-          r: rResult.data,
-          g1: g1Result.data,
-          g2: g2Result.data,
-          b: bResult.data,
-          combined: combinedResult.data,
-        })
+        if (
+          rResult.status === 'ok' &&
+          g1Result.status === 'ok' &&
+          g2Result.status === 'ok' &&
+          bResult.status === 'ok' &&
+          combinedResult.status === 'ok'
+        ) {
+          setData({
+            r: rResult.data,
+            g1: g1Result.data,
+            g2: g2Result.data,
+            b: bResult.data,
+            combined: combinedResult.data,
+          })
+        } else {
+          // Log first error for debugging
+          const firstError = [rResult, g1Result, g2Result, bResult, combinedResult]
+            .find(r => r.status === 'error')
+          if (firstError && firstError.status === 'error') {
+            console.error('Histogram fetch error:', firstError.error)
+          }
+        }
+      } catch (err) {
+        console.error('Histogram fetch exception:', err)
       }
     }
 

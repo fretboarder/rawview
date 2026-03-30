@@ -105,7 +105,7 @@ export function HistogramPanel() {
         ctx.fillRect(x, y, 1, barHeight)
       }
     }
-  }, [histogramData, visibleChannels])
+  }, [histogramData, visibleChannels, histogramVisible])
 
   if (!histogramVisible) return null
 

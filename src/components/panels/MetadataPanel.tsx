@@ -11,6 +11,19 @@ import { usePanelStore } from '@/store/panel-store'
 
 const PLACEHOLDER = '—'
 
+/**
+ * Format shutter speed as a fraction (e.g. 1/250) or seconds (e.g. 2").
+ * LibRaw returns shutter as a float in seconds.
+ */
+function formatShutter(seconds: number): string {
+  if (seconds >= 1) {
+    return `${seconds.toFixed(1)}"`
+  }
+  // Express as 1/N fraction
+  const denominator = Math.round(1 / seconds)
+  return `1/${denominator}`
+}
+
 interface MetaRowProps {
   label: string
   value: string | number | null | undefined
@@ -61,10 +74,10 @@ export function MetadataPanel() {
         <MetaRow label="Camera" value={cameraModel} />
         <MetaRow label="Lens" value={exif?.lens} />
         <div className="my-0.5 border-t border-neutral-800" />
-        <MetaRow label="ISO" value={exif?.iso != null ? `ISO ${exif.iso}` : null} />
-        <MetaRow label="Shutter" value={exif?.shutter != null ? `${exif.shutter}s` : null} />
-        <MetaRow label="Aperture" value={exif?.aperture != null ? `f/${exif.aperture}` : null} />
-        <MetaRow label="Focal Length" value={exif?.focal_length != null ? `${exif.focal_length}mm` : null} />
+        <MetaRow label="ISO" value={exif?.iso != null && exif.iso > 0 ? `ISO ${Math.round(exif.iso)}` : null} />
+        <MetaRow label="Shutter" value={exif?.shutter != null && exif.shutter > 0 ? formatShutter(exif.shutter) : null} />
+        <MetaRow label="Aperture" value={exif?.aperture != null && exif.aperture > 0 ? `f/${exif.aperture.toFixed(1)}` : null} />
+        <MetaRow label="Focal Length" value={exif?.focal_length != null && exif.focal_length > 0 ? `${Math.round(exif.focal_length)}mm` : null} />
         <div className="my-0.5 border-t border-neutral-800" />
         <MetaRow label="Date" value={exif?.timestamp ? new Date(exif.timestamp * 1000).toLocaleString() : null} />
       </div>

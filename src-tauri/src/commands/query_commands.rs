@@ -51,7 +51,10 @@ pub async fn get_histogram(
     channel: Option<CfaChannel>,
     session: State<'_, SessionManager>,
 ) -> Result<HistogramData, RawViewError> {
-    session.with_store(|store| histogram::compute_histogram(store, channel))
+    log::info!("get_histogram called with channel={channel:?}");
+    let result = session.with_store(|store| histogram::compute_histogram(store, channel));
+    log::info!("get_histogram result ok={}", result.is_ok());
+    result
 }
 
 /// Get full EXIF metadata for the current session.
