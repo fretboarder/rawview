@@ -82,10 +82,10 @@ development_status:
   epic-5-retrospective: optional
 
   # Epic 6: Cross-Platform Release
-  epic-6: backlog
-  6-1-test-corpus-json-reference-sidecars-and-accuracy-ci: backlog
-  6-2-github-actions-release-workflow-and-platform-packaging: backlog
-  6-3-readme-things-we-wont-do-doc-and-launch-readiness: backlog
+  epic-6: in-progress
+  6-1-test-corpus-json-reference-sidecars-and-accuracy-ci: review
+  6-2-github-actions-release-workflow-and-platform-packaging: review
+  6-3-readme-things-we-wont-do-doc-and-launch-readiness: review
   epic-6-retrospective: optional
 
   # Epic 7: Interactive Analysis — Tier 2
