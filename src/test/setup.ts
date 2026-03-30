@@ -39,6 +39,11 @@ Object.defineProperty(window, 'localStorage', {
 })
 
 // Mock Tauri APIs for tests
+vi.mock('@tauri-apps/api/core', () => ({
+  convertFileSrc: vi.fn((path: string, protocol: string) => `${protocol}://localhost${path}`),
+  invoke: vi.fn().mockResolvedValue(undefined),
+}))
+
 vi.mock('@tauri-apps/api/event', () => ({
   listen: vi.fn().mockResolvedValue(() => {
     // Mock unlisten function

@@ -1,4 +1,5 @@
 import { cn } from '@/lib/utils'
+import { ProtocolTest } from '@/components/viewer/ProtocolTest'
 
 interface MainWindowContentProps {
   children?: React.ReactNode
@@ -11,11 +12,7 @@ export function MainWindowContent({
 }: MainWindowContentProps) {
   return (
     <div className={cn('flex h-full flex-col bg-background', className)}>
-      {children || (
-        <div className="flex flex-1 flex-col items-center justify-center">
-          <h1 className="text-4xl font-bold text-foreground">Hello World</h1>
-        </div>
-      )}
+      {children || <ProtocolTest />}
     </div>
   )
 }

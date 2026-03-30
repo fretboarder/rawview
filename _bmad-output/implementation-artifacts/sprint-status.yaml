@@ -46,7 +46,7 @@ development_status:
   epic-1: in-progress
   1-1-scaffold-project-from-starter-template: review
   1-2-create-rawview-libraw-sys-cargo-workspace-crate: review
-  1-3-register-custom-rawview-uri-protocol: backlog
+  1-3-register-custom-rawview-uri-protocol: review
   1-4-establish-ci-cd-pipeline-for-all-three-platforms: backlog
   epic-1-retrospective: optional
 

@@ -6,10 +6,11 @@
 
 mod bindings;
 mod commands;
+mod protocol;
 mod types;
 mod utils;
 
-use tauri::{Manager, RunEvent, WindowEvent};
+use tauri::{RunEvent, WindowEvent};
 
 /// Application entry point. Sets up all plugins and initializes the app.
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -70,6 +71,9 @@ pub fn run() {
         .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_os::init())
+        .register_asynchronous_uri_scheme_protocol("rawview", |ctx, request, responder| {
+            protocol::viewport_protocol::handle(ctx, request, responder);
+        })
         .setup(|app| {
             log::info!("Application starting up");
             log::debug!(
