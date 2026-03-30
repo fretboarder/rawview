@@ -1,5 +1,5 @@
 [workspace]
-members = []
+members = ["crates/rawview-libraw-sys"]
 
 [package]
 name = "rawview"
