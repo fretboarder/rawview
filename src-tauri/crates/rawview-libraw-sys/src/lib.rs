@@ -1,11 +1,11 @@
-//! Raw FFI bindings to LibRaw C API.
-//! 
+//! Raw FFI bindings to LibRaw C API and RawView helper functions.
+//!
 //! This crate provides unsafe bindings to LibRaw 0.21.5.
 //! Higher-level safe wrappers are provided by the main rawview crate.
 
 #![allow(non_camel_case_types)]
 
-use std::os::raw::{c_char, c_int, c_uint};
+use std::os::raw::{c_char, c_int, c_uint, c_ushort};
 
 // Opaque handle to LibRaw processor
 #[repr(C)]
@@ -36,9 +36,11 @@ pub struct libraw_iparams_t {
 }
 
 extern "C" {
+    // ========================================================================
+    // LibRaw C API functions
+    // ========================================================================
+
     /// Initialize a new LibRaw processor instance.
-    /// `flags` should be 0 for default behavior.
-    /// Returns a pointer to the processor, or null on failure.
     pub fn libraw_init(flags: c_uint) -> *mut libraw_data_t;
 
     /// Close and free a LibRaw processor instance.
@@ -61,6 +63,59 @@ extern "C" {
 
     /// Get maximum pixel value (white level / saturation point).
     pub fn libraw_get_color_maximum(lr: *mut libraw_data_t) -> c_int;
+
+    /// Get CFA color index at (row, col). Returns 0=R, 1=G, 2=B, 3=G2.
+    pub fn libraw_COLOR(lr: *mut libraw_data_t, row: c_int, col: c_int) -> c_int;
+
+    // ========================================================================
+    // RawView helper functions (from helpers.c)
+    // ========================================================================
+
+    /// Get pointer to the raw Bayer image data (after unpack).
+    /// Returns NULL if no single-channel raw data available.
+    pub fn rawview_get_raw_image(lr: *mut libraw_data_t) -> *const c_ushort;
+
+    /// Get row stride in bytes (after unpack).
+    pub fn rawview_get_raw_pitch(lr: *mut libraw_data_t) -> c_uint;
+
+    /// Get sensor dimensions (full and active area).
+    pub fn rawview_get_sizes(
+        lr: *mut libraw_data_t,
+        raw_width: *mut c_ushort,
+        raw_height: *mut c_ushort,
+        width: *mut c_ushort,
+        height: *mut c_ushort,
+        top_margin: *mut c_ushort,
+        left_margin: *mut c_ushort,
+    );
+
+    /// Get black level (global + per-channel) and white level.
+    pub fn rawview_get_color_info(
+        lr: *mut libraw_data_t,
+        black: *mut c_uint,
+        cblack: *mut c_uint, // array of 4
+        maximum: *mut c_uint,
+    );
+
+    /// Get shooting parameters (EXIF).
+    pub fn rawview_get_imgother(
+        lr: *mut libraw_data_t,
+        iso_speed: *mut f32,
+        shutter: *mut f32,
+        aperture: *mut f32,
+        focal_len: *mut f32,
+        timestamp: *mut i64,
+    );
+
+    /// Get lens name string. Writes into buf (max buf_len chars).
+    pub fn rawview_get_lens_name(
+        lr: *mut libraw_data_t,
+        buf: *mut c_char,
+        buf_len: c_int,
+    );
+
+    /// Get CFA filters value from idata.
+    pub fn rawview_get_filters(lr: *mut libraw_data_t) -> c_uint;
 }
 
 #[cfg(test)]

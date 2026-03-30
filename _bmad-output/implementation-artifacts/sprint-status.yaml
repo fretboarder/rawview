@@ -51,8 +51,8 @@ development_status:
   epic-1-retrospective: optional
 
   # Epic 2: The Revelation Moment (Open, View, Inspect)
-  epic-2: backlog
-  2-1-raw-file-decoder-and-bayer-data-store: backlog
+  epic-2: in-progress
+  2-1-raw-file-decoder-and-bayer-data-store: review
   2-2-viewport-renderer-and-custom-uri-protocol-integration: backlog
   2-3-canvas-display-zoom-pan-and-file-open-ui: backlog
   2-4-photosite-inspector-and-viewport-position-indicator: backlog

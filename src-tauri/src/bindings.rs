@@ -1,12 +1,13 @@
 use tauri_specta::{collect_commands, Builder};
 
 pub fn generate_bindings() -> Builder<tauri::Wry> {
-    use crate::commands::recovery;
+    use crate::commands::{file_commands, recovery};
 
     Builder::<tauri::Wry>::new().commands(collect_commands![
         recovery::save_emergency_data,
         recovery::load_emergency_data,
         recovery::cleanup_old_recovery_files,
+        file_commands::open_file,
     ])
 }
 

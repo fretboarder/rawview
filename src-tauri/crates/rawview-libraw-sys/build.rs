@@ -46,6 +46,14 @@ fn main() {
 
     build.compile("raw");
 
+    // Compile our C helper functions (getters for struct fields not exposed by C API)
+    cc::Build::new()
+        .file("helpers.c")
+        .include(&libraw_dir)
+        .include(libraw_dir.join("libraw"))
+        .warnings(false)
+        .compile("rawview_helpers");
+
     // Link C++ standard library
     let target_os = std::env::var("CARGO_CFG_TARGET_OS").unwrap_or_default();
     match target_os.as_str() {
@@ -58,6 +66,7 @@ fn main() {
     // Tell cargo to rerun if source changes
     println!("cargo:rerun-if-changed=vendor/libraw/src");
     println!("cargo:rerun-if-changed=vendor/libraw/libraw");
+    println!("cargo:rerun-if-changed=helpers.c");
 }
 
 /// Recursively collect all .cpp files under a directory.

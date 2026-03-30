@@ -6,11 +6,15 @@
 
 mod bindings;
 mod commands;
+pub mod data;
+pub mod decoder;
+pub mod error;
 mod protocol;
+pub mod session;
 mod types;
 mod utils;
 
-use tauri::{RunEvent, WindowEvent};
+use tauri::{Manager, RunEvent, WindowEvent};
 
 /// Application entry point. Sets up all plugins and initializes the app.
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -75,6 +79,9 @@ pub fn run() {
             protocol::viewport_protocol::handle(ctx, request, responder);
         })
         .setup(|app| {
+            // Initialize session manager
+            app.manage(session::SessionManager::new());
+
             log::info!("Application starting up");
             log::debug!(
                 "App handle initialized for package: {}",

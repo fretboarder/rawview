@@ -3408,6 +3408,7 @@ version = "0.1.0"
 dependencies = [
  "image",
  "log",
+ "rawview-libraw-sys",
  "regex",
  "serde",
  "serde_json",
@@ -3426,6 +3427,7 @@ dependencies = [
  "tauri-plugin-process",
  "tauri-plugin-window-state",
  "tauri-specta",
+ "uuid",
 ]
 
 [[package]]
