@@ -60,9 +60,6 @@ async openFile(path: string) : Promise<Result<SessionInfo, RawViewError>> {
 },
 /**
  * Get photosite information at a specific sensor coordinate.
- * 
- * Returns the CFA channel identity, raw u16 value, and position.
- * Values are always the unmodified raw sensor values (NFR8).
  */
 async getPhotositeInfo(row: number, col: number) : Promise<Result<PhotositeInfo, RawViewError>> {
     try {
@@ -73,19 +70,21 @@ async getPhotositeInfo(row: number, col: number) : Promise<Result<PhotositeInfo,
 }
 },
 /**
- * Get histogram data for the current session.
- * Optionally filter to a specific channel.
+ * Get histogram data, optionally filtered by CFA channel.
+ * 
+ * Returns 256 bins computed from raw sensor values.
+ * All computation uses exact u16 values — no display transforms.
  */
-async getHistogram(channel?: string | null) : Promise<Result<HistogramData, RawViewError>> {
+async getHistogram(channel: CfaChannel | null) : Promise<Result<HistogramData, RawViewError>> {
     try {
-    return { status: "ok", data: await TAURI_INVOKE("get_histogram", { channel: channel ?? null }) };
+    return { status: "ok", data: await TAURI_INVOKE("get_histogram", { channel }) };
 } catch (e) {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
 }
 },
 /**
- * Get EXIF metadata for the current session.
+ * Get full EXIF metadata for the current session.
  */
 async getFileMetadata() : Promise<Result<ExifData, RawViewError>> {
     try {
@@ -144,6 +143,38 @@ export type CfaPattern =
  * Fuji X-Trans 6×6 pattern
  */
 { type: "XTrans"; grid: [([number, number, number, number, number, number]), ([number, number, number, number, number, number]), ([number, number, number, number, number, number]), ([number, number, number, number, number, number]), ([number, number, number, number, number, number]), ([number, number, number, number, number, number])] }
+/**
+ * EXIF metadata extracted from the raw file.
+ */
+export type ExifData = { make: string; model: string; iso: number; shutter: number; aperture: number; focal_length: number; timestamp: number; lens: string }
+/**
+ * Histogram data for a single channel or combined.
+ */
+export type HistogramData = { 
+/**
+ * 256 bin counts
+ */
+bins: number[]; 
+/**
+ * Number of bins (always 256)
+ */
+bin_count: number; 
+/**
+ * Minimum value in the data
+ */
+min_value: number; 
+/**
+ * Maximum value in the data
+ */
+max_value: number; 
+/**
+ * Black level used for bin mapping
+ */
+black_level: number; 
+/**
+ * White level used for bin mapping
+ */
+white_level: number }
 export type JsonValue = null | boolean | number | string | JsonValue[] | Partial<{ [key in string]: JsonValue }>
 /**
  * Information about a single photosite.
@@ -206,31 +237,6 @@ export type RecoveryError =
  * Information sent to the frontend after opening a file.
  */
 export type SessionInfo = { session_id: string; filename: string; width: number; height: number; cfa_pattern: CfaPattern; bit_depth: number; black_level: number; white_level: number; iso: number }
-
-/**
- * Histogram data — 256 bins per channel.
- */
-export type HistogramData = {
-  r: number[]
-  g1: number[]
-  g2: number[]
-  b: number[]
-  total_pixels: number
-}
-
-/**
- * EXIF metadata for the opened file.
- */
-export type ExifData = {
-  make: string | null
-  model: string | null
-  lens: string | null
-  iso: number | null
-  shutter_speed: string | null
-  aperture: string | null
-  focal_length: string | null
-  date_time: string | null
-}
 
 /** tauri-specta globals **/
 

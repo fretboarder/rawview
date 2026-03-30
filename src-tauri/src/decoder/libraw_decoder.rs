@@ -280,7 +280,7 @@ fn get_exif(lr: *mut libraw_data_t) -> ExifData {
         shutter,
         aperture,
         focal_length: focal_len,
-        timestamp,
+        timestamp: timestamp as i32,
         lens,
     }
 }

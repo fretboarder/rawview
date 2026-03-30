@@ -31,7 +31,7 @@ pub struct ExifData {
     pub shutter: f32,
     pub aperture: f32,
     pub focal_length: f32,
-    pub timestamp: i64,
+    pub timestamp: i32,
     pub lens: String,
 }
 
