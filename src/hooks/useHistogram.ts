@@ -4,12 +4,23 @@ import type { HistogramData } from '@/lib/tauri-bindings'
 import { useViewerStore } from '@/store/viewer-store'
 
 /**
- * Hook that fetches histogram data when the session or channel changes.
- * Returns the histogram data or null if not available.
+ * Per-channel histogram data for the panel.
  */
-export function useHistogram(channel?: string | null): HistogramData | null {
+export interface PerChannelHistograms {
+  r: HistogramData
+  g1: HistogramData
+  g2: HistogramData
+  b: HistogramData
+  combined: HistogramData
+}
+
+/**
+ * Hook that fetches all per-channel histograms when the session changes.
+ * Makes 5 IPC calls (R, G1, G2, B, combined) in parallel.
+ */
+export function useHistogram(): PerChannelHistograms | null {
   const session = useViewerStore(s => s.session)
-  const [data, setData] = useState<HistogramData | null>(null)
+  const [data, setData] = useState<PerChannelHistograms | null>(null)
 
   useEffect(() => {
     if (!session) {
@@ -19,19 +30,40 @@ export function useHistogram(channel?: string | null): HistogramData | null {
 
     let cancelled = false
 
-    const fetchHistogram = async () => {
-      const result = await commands.getHistogram(channel ?? null)
-      if (!cancelled && result.status === 'ok') {
-        setData(result.data)
+    const fetchAll = async () => {
+      const [rResult, g1Result, g2Result, bResult, combinedResult] = await Promise.all([
+        commands.getHistogram('R' as never),
+        commands.getHistogram('G1' as never),
+        commands.getHistogram('G2' as never),
+        commands.getHistogram('B' as never),
+        commands.getHistogram(null),
+      ])
+
+      if (cancelled) return
+
+      if (
+        rResult.status === 'ok' &&
+        g1Result.status === 'ok' &&
+        g2Result.status === 'ok' &&
+        bResult.status === 'ok' &&
+        combinedResult.status === 'ok'
+      ) {
+        setData({
+          r: rResult.data,
+          g1: g1Result.data,
+          g2: g2Result.data,
+          b: bResult.data,
+          combined: combinedResult.data,
+        })
       }
     }
 
-    fetchHistogram()
+    fetchAll()
 
     return () => {
       cancelled = true
     }
-  }, [session, channel])
+  }, [session])
 
   return data
 }

@@ -62,11 +62,11 @@ export function MetadataPanel() {
         <MetaRow label="Lens" value={exif?.lens} />
         <div className="my-0.5 border-t border-neutral-800" />
         <MetaRow label="ISO" value={exif?.iso != null ? `ISO ${exif.iso}` : null} />
-        <MetaRow label="Shutter" value={exif?.shutter_speed} />
-        <MetaRow label="Aperture" value={exif?.aperture} />
-        <MetaRow label="Focal Length" value={exif?.focal_length} />
+        <MetaRow label="Shutter" value={exif?.shutter != null ? `${exif.shutter}s` : null} />
+        <MetaRow label="Aperture" value={exif?.aperture != null ? `f/${exif.aperture}` : null} />
+        <MetaRow label="Focal Length" value={exif?.focal_length != null ? `${exif.focal_length}mm` : null} />
         <div className="my-0.5 border-t border-neutral-800" />
-        <MetaRow label="Date" value={exif?.date_time} />
+        <MetaRow label="Date" value={exif?.timestamp ? new Date(exif.timestamp * 1000).toLocaleString() : null} />
       </div>
     </div>
   )

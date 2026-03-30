@@ -74,10 +74,10 @@ export function HistogramPanel() {
     }
 
     const channelArrays: Record<ChannelKey, number[]> = {
-      r: histogramData.r,
-      g1: histogramData.g1,
-      g2: histogramData.g2,
-      b: histogramData.b,
+      r: histogramData.r.bins,
+      g1: histogramData.g1.bins,
+      g2: histogramData.g2.bins,
+      b: histogramData.b.bins,
     }
 
     // Find max value across all visible channels for normalization
