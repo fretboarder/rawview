@@ -7,7 +7,7 @@ import { convertFileSrc } from "@tauri-apps/api/core"
 export interface ViewportParams {
   sessionId: string
   mode: string
-  zoom: number
+  zoom: number | 'fit'
   x: number
   y: number
   w: number
@@ -68,7 +68,7 @@ export function buildViewportFitUrl(
   return buildViewportUrl({
     sessionId,
     mode,
-    zoom: 1,
+    zoom: 'fit',
     x: 0,
     y: 0,
     w: width,

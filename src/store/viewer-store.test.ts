@@ -51,8 +51,8 @@ describe('ViewerStore', () => {
       expect(useViewerStore.getState().mode).toBe('bayer')
     })
 
-    it('starts with stretch = false', () => {
-      expect(useViewerStore.getState().stretch).toBe(false)
+    it('starts with stretch = true', () => {
+      expect(useViewerStore.getState().stretch).toBe(true)
     })
 
     it('starts with null errorMessage', () => {
@@ -89,16 +89,17 @@ describe('ViewerStore', () => {
   })
 
   describe('toggleStretch', () => {
-    it('toggles stretch from false to true', () => {
-      expect(useViewerStore.getState().stretch).toBe(false)
-      useViewerStore.getState().toggleStretch()
+    it('toggles stretch from true to false', () => {
       expect(useViewerStore.getState().stretch).toBe(true)
+      useViewerStore.getState().toggleStretch()
+      expect(useViewerStore.getState().stretch).toBe(false)
     })
 
-    it('toggles stretch from true to false', () => {
-      useViewerStore.getState().toggleStretch()
-      useViewerStore.getState().toggleStretch()
+    it('toggles stretch from false to true', () => {
+      useViewerStore.getState().toggleStretch() // true → false
       expect(useViewerStore.getState().stretch).toBe(false)
+      useViewerStore.getState().toggleStretch() // false → true
+      expect(useViewerStore.getState().stretch).toBe(true)
     })
   })
 
@@ -118,7 +119,7 @@ describe('ViewerStore', () => {
       expect(state.panX).toBe(0)
       expect(state.panY).toBe(0)
       expect(state.mode).toBe('bayer')
-      expect(state.stretch).toBe(false)
+      expect(state.stretch).toBe(true)
       expect(state.errorMessage).toBeNull()
     })
   })

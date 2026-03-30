@@ -114,7 +114,7 @@ export const useViewerStore = create<ViewerState>()(
             panX: 0,
             panY: 0,
             mode: 'bayer',
-            stretch: false,
+      stretch: true,
             errorMessage: null,
           },
           false,

@@ -140,9 +140,10 @@ pub fn render(store: &BayerDataStore, params: &ViewportParams) -> Result<Vec<u8>
 
     // Determine value mapping range
     let (map_min, map_max) = if params.stretch {
-        scaling::compute_data_range(store.raw_data())
+        // Stretch mode: percentile-based range for usable display
+        scaling::compute_stretch_range(store.raw_data())
     } else {
-        // Use average black level for raw mode
+        // Raw mode: full sensor range (BL to WL) — very dark, for analysis
         let bl = store.black_levels();
         let avg_bl = ((bl[0] as u32 + bl[1] as u32 + bl[2] as u32 + bl[3] as u32) / 4) as u16;
         (avg_bl, store.white_level())
@@ -150,6 +151,27 @@ pub fn render(store: &BayerDataStore, params: &ViewportParams) -> Result<Vec<u8>
 
     // Allocate output buffer
     let mut rgba = vec![0u8; out_w * out_h * 4];
+
+    log::info!(
+        "Render: sensor={}×{}, output={}×{}, scale={:.6}, src_origin=({:.2},{:.2}), map=[{}..{}]",
+        sensor_w, sensor_h, out_w, out_h, scale, src_x, src_y, map_min, map_max
+    );
+
+    // Sample a few pixel values for debugging
+    {
+        let center_row = sensor_h / 2;
+        let center_col = sensor_w / 2;
+        if let Some(v) = store.get_photosite(center_row, center_col) {
+            let b = scaling::map_value_raw(v, map_min, map_max);
+            log::info!("Sample pixel at ({center_row},{center_col}): raw={v}, brightness={b}, channel={:?}", store.get_channel(center_row, center_col));
+        }
+        if let Some(v) = store.get_photosite(0, 0) {
+            log::info!("Sample pixel at (0,0): raw={v}");
+        }
+        if let Some(v) = store.get_photosite(100, 100) {
+            log::info!("Sample pixel at (100,100): raw={v}");
+        }
+    }
 
     // Render rows in parallel with rayon
     rgba.par_chunks_mut(out_w * 4)

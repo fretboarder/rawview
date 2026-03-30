@@ -24,9 +24,10 @@ pub fn handle<R: tauri::Runtime>(
     let app_handle = ctx.app_handle().clone();
 
     tauri::async_runtime::spawn(async move {
+        let uri = request.uri().to_string();
         let path = request.uri().path().to_string();
         let query = request.uri().query().unwrap_or("").to_string();
-        log::debug!("rawview:// protocol request: path={path} query={query}");
+        log::info!("rawview:// request: uri={uri} path={path} query={query}");
 
         // Wrap in catch_unwind for rayon panic safety
         let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
@@ -89,6 +90,11 @@ fn render_viewport<R: tauri::Runtime>(
         400u16
     })?;
     params.session_id = session_id.to_string();
+
+    log::info!(
+        "Viewport render: session={}, mode={:?}, zoom={:?}, {}×{}, stretch={}",
+        session_id, params.mode, params.zoom, params.w, params.h, params.stretch
+    );
 
     // Access session manager
     let session_mgr = app_handle.try_state::<SessionManager>().ok_or_else(|| {

@@ -47,6 +47,47 @@ pub fn compute_data_range(data: &[u16]) -> (u16, u16) {
     (min, max)
 }
 
+/// Compute percentile-based data range for display stretch.
+/// Uses 0.1% and 99.9% percentiles to avoid hot/dead pixel influence.
+/// This gives a much more usable display range than absolute min/max.
+pub fn compute_stretch_range(data: &[u16]) -> (u16, u16) {
+    if data.is_empty() {
+        return (0, 0);
+    }
+
+    // Build a histogram to find percentiles without sorting
+    let mut hist = [0u32; 65536];
+    for &v in data {
+        hist[v as usize] += 1;
+    }
+
+    let total = data.len() as f64;
+    let low_cutoff = (total * 0.001) as u32;  // 0.1%
+    let high_cutoff = (total * 0.999) as u32; // 99.9%
+
+    let mut low = 0u16;
+    let mut high = 65535u16;
+    let mut cumulative = 0u32;
+
+    for (val, &count) in hist.iter().enumerate() {
+        cumulative += count;
+        if cumulative >= low_cutoff && low == 0 {
+            low = val as u16;
+        }
+        if cumulative >= high_cutoff {
+            high = val as u16;
+            break;
+        }
+    }
+
+    // Ensure we have a usable range
+    if high <= low {
+        high = low + 1;
+    }
+
+    (low, high)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
