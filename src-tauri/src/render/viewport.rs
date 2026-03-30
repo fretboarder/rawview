@@ -174,6 +174,13 @@ pub fn render(store: &BayerDataStore, params: &ViewportParams) -> Result<Vec<u8>
     }
 
     // Render rows in parallel with rayon
+    //
+    // For Bayer mode at zoom-out (scale < 1), we snap source coordinates to
+    // 2×2 Bayer grid boundaries. This ensures each output pixel samples from a
+    // consistent position within the RGGB quad, producing clean mosaic squares
+    // instead of moiré artifacts from nearest-neighbor aliasing.
+    let snap_to_bayer = matches!(params.mode, RenderMode::Bayer) && scale < 1.0;
+
     rgba.par_chunks_mut(out_w * 4)
         .enumerate()
         .for_each(|(out_row, row_buf)| {
@@ -190,8 +197,23 @@ pub fn render(store: &BayerDataStore, params: &ViewportParams) -> Result<Vec<u8>
                     // Out of bounds — render as dark gray
                     [32u8, 32, 32, 255]
                 } else {
-                    let src_row = src_row_f as u32;
-                    let src_col = src_col_f as u32;
+                    let mut src_row = src_row_f as u32;
+                    let mut src_col = src_col_f as u32;
+
+                    if snap_to_bayer {
+                        // Snap to 2×2 grid: determine which position in the Bayer
+                        // quad this output pixel represents based on output coordinates.
+                        // Output (even_row, even_col) → top-left of quad, etc.
+                        let quad_row = out_row % 2;
+                        let quad_col = out_col % 2;
+                        // Snap source to nearest even coordinate, then offset by quad position
+                        src_row = (src_row & !1) + quad_row as u32;
+                        src_col = (src_col & !1) + quad_col as u32;
+                        // Clamp to sensor bounds
+                        src_row = src_row.min(sensor_h - 1);
+                        src_col = src_col.min(sensor_w - 1);
+                    }
+
                     let value = store.get_photosite(src_row, src_col).unwrap_or(0);
                     let brightness = scaling::map_value_raw(value, map_min, map_max);
 
