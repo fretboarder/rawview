@@ -5,10 +5,17 @@ import App from './App'
 // Tauri bindings are mocked globally in src/test/setup.ts
 
 describe('App', () => {
-  it('renders main window layout', () => {
+  it('renders main window layout with viewer canvas empty state', () => {
     render(<App />)
     expect(
-      screen.getByRole('heading', { name: /protocol test/i })
+      screen.getByText(/drop a raw file here or use file/i)
+    ).toBeInTheDocument()
+  })
+
+  it('renders file open button in toolbar', () => {
+    render(<App />)
+    expect(
+      screen.getByRole('button', { name: /open file/i })
     ).toBeInTheDocument()
   })
 

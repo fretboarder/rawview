@@ -22,6 +22,9 @@ export interface ViewportParams {
  * - macOS/Linux: `rawview://localhost/viewport/...`
  * - Windows: `http://rawview.localhost/viewport/...`
  *
+ * IMPORTANT: Query params are appended manually AFTER convertFileSrc because
+ * convertFileSrc percent-encodes `?` when it is part of the path argument.
+ *
  * @example
  * ```ts
  * const url = buildViewportUrl({
@@ -34,7 +37,11 @@ export interface ViewportParams {
  * ```
  */
 export function buildViewportUrl(params: ViewportParams): string {
-  const queryString = new URLSearchParams({
+  // Build base URL without query params so convertFileSrc doesn't encode '?'
+  const baseUrl = convertFileSrc(`/viewport/${params.sessionId}`, "rawview")
+
+  // Append query string manually (not through convertFileSrc)
+  const query = new URLSearchParams({
     mode: params.mode,
     zoom: params.zoom.toString(),
     x: params.x.toString(),
@@ -44,8 +51,30 @@ export function buildViewportUrl(params: ViewportParams): string {
     stretch: params.stretch.toString(),
   }).toString()
 
-  const path = `/viewport/${params.sessionId}?${queryString}`
-  return convertFileSrc(path, "rawview")
+  return `${baseUrl}?${query}`
+}
+
+/**
+ * Convenience function to build a viewport URL that fits the full canvas.
+ * Sends the canvas dimensions so the backend renders exactly the right size.
+ */
+export function buildViewportFitUrl(
+  sessionId: string,
+  width: number,
+  height: number,
+  mode: string,
+  stretch: boolean
+): string {
+  return buildViewportUrl({
+    sessionId,
+    mode,
+    zoom: 1,
+    x: 0,
+    y: 0,
+    w: width,
+    h: height,
+    stretch,
+  })
 }
 
 /**

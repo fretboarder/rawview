@@ -1,6 +1,13 @@
 import '@testing-library/jest-dom'
 import { vi } from 'vitest'
 
+// Mock ResizeObserver for tests (not available in jsdom)
+global.ResizeObserver = class ResizeObserver {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+}
+
 // Mock matchMedia for tests
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
@@ -68,11 +75,22 @@ vi.mock('@tauri-apps/api/window', () => ({
     toggleMaximize: vi.fn().mockResolvedValue(undefined),
     close: vi.fn().mockResolvedValue(undefined),
     setFullscreen: vi.fn().mockResolvedValue(undefined),
+    setTitle: vi.fn().mockResolvedValue(undefined),
     onFocusChanged: vi
       .fn()
       .mockResolvedValue(vi.fn().mockReturnValue(undefined)),
     onResized: vi.fn().mockReturnValue(Promise.resolve(vi.fn())),
   }),
+}))
+
+vi.mock('@tauri-apps/api/webviewWindow', () => ({
+  getCurrentWebviewWindow: vi.fn().mockReturnValue({
+    onDragDropEvent: vi.fn().mockResolvedValue(vi.fn()),
+  }),
+}))
+
+vi.mock('@tauri-apps/plugin-dialog', () => ({
+  open: vi.fn().mockResolvedValue(null),
 }))
 
 // Mock typed Tauri bindings (tauri-specta generated)
@@ -83,6 +101,7 @@ vi.mock('@/lib/tauri-bindings', () => ({
     cleanupOldRecoveryFiles: vi
       .fn()
       .mockResolvedValue({ status: 'ok', data: 0 }),
+    openFile: vi.fn().mockResolvedValue({ status: 'ok', data: null }),
   },
   unwrapResult: vi.fn((result: { status: string; data?: unknown }) => {
     if (result.status === 'ok') return result.data
