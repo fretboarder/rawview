@@ -4,7 +4,7 @@ import { commands } from '@/lib/tauri-bindings'
 import type { SessionInfo } from '@/lib/bindings'
 
 type ViewerStatus = 'idle' | 'loading' | 'ready' | 'error'
-type ViewerMode = 'bayer' | 'grayscale'
+export type ViewerMode = 'bayer' | 'grayscale' | 'channel_r' | 'channel_g1' | 'channel_g2' | 'channel_b'
 
 interface ViewerState {
   status: ViewerStatus
@@ -20,6 +20,7 @@ interface ViewerState {
   setZoom: (z: number) => void
   setPan: (x: number, y: number) => void
   setMode: (m: ViewerMode) => void
+  setChannel: (ch: 'r' | 'g1' | 'g2' | 'b') => void
   toggleStretch: () => void
   reset: () => void
 }
@@ -84,6 +85,16 @@ export const useViewerStore = create<ViewerState>()(
 
       setMode: (m: ViewerMode) => {
         set({ mode: m }, false, 'setMode')
+      },
+
+      setChannel: (ch: 'r' | 'g1' | 'g2' | 'b') => {
+        const modeMap: Record<'r' | 'g1' | 'g2' | 'b', ViewerMode> = {
+          r: 'channel_r',
+          g1: 'channel_g1',
+          g2: 'channel_g2',
+          b: 'channel_b',
+        }
+        set({ mode: modeMap[ch] }, false, 'setChannel')
       },
 
       toggleStretch: () => {

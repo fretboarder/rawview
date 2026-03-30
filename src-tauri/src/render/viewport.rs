@@ -33,7 +33,10 @@ pub struct ViewportParams {
 pub enum RenderMode {
     Bayer,
     Grayscale,
-    // Channel isolation modes added in Story 3.2
+    ChannelR,
+    ChannelG1,
+    ChannelG2,
+    ChannelB,
 }
 
 /// Zoom level specification.
@@ -66,6 +69,10 @@ pub fn parse_viewport_params(query: &str) -> Result<ViewportParams, RawViewError
                 mode = match val {
                     "bayer" => RenderMode::Bayer,
                     "grayscale" => RenderMode::Grayscale,
+                    "channel_r" => RenderMode::ChannelR,
+                    "channel_g1" => RenderMode::ChannelG1,
+                    "channel_g2" => RenderMode::ChannelG2,
+                    "channel_b" => RenderMode::ChannelB,
                     _ => RenderMode::Bayer,
                 };
             }
@@ -172,6 +179,22 @@ pub fn render(store: &BayerDataStore, params: &ViewportParams) -> Result<Vec<u8>
                             modes::render_bayer_pixel(channel, brightness)
                         }
                         RenderMode::Grayscale => modes::render_grayscale_pixel(brightness),
+                        RenderMode::ChannelR => {
+                            let channel = store.get_channel(src_row, src_col);
+                            modes::render_channel_pixel(channel, brightness, &crate::data::cfa::CfaChannel::R)
+                        }
+                        RenderMode::ChannelG1 => {
+                            let channel = store.get_channel(src_row, src_col);
+                            modes::render_channel_pixel(channel, brightness, &crate::data::cfa::CfaChannel::G1)
+                        }
+                        RenderMode::ChannelG2 => {
+                            let channel = store.get_channel(src_row, src_col);
+                            modes::render_channel_pixel(channel, brightness, &crate::data::cfa::CfaChannel::G2)
+                        }
+                        RenderMode::ChannelB => {
+                            let channel = store.get_channel(src_row, src_col);
+                            modes::render_channel_pixel(channel, brightness, &crate::data::cfa::CfaChannel::B)
+                        }
                     }
                 };
 

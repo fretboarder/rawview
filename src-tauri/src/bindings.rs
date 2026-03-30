@@ -9,6 +9,8 @@ pub fn generate_bindings() -> Builder<tauri::Wry> {
         recovery::cleanup_old_recovery_files,
         file_commands::open_file,
         query_commands::get_photosite_info,
+        query_commands::get_histogram,
+        query_commands::get_file_metadata,
     ])
 }
 

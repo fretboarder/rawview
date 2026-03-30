@@ -19,7 +19,7 @@
  */
 
 export { commands, type Result } from './bindings'
-export type { JsonValue, RecoveryError, SessionInfo, CfaPattern, BayerPattern, RawViewError, CfaChannel, PhotositeInfo } from './bindings'
+export type { JsonValue, RecoveryError, SessionInfo, CfaPattern, BayerPattern, RawViewError, CfaChannel, PhotositeInfo, HistogramData, ExifData } from './bindings'
 
 /**
  * Helper to unwrap a Result type, throwing on error

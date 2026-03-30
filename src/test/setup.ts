@@ -106,6 +106,29 @@ vi.mock('@/lib/tauri-bindings', () => ({
       status: 'ok',
       data: { channel: 'R', value: 1024, row: 0, col: 0 },
     }),
+    getHistogram: vi.fn().mockResolvedValue({
+      status: 'ok',
+      data: {
+        r: Array(256).fill(0),
+        g1: Array(256).fill(0),
+        g2: Array(256).fill(0),
+        b: Array(256).fill(0),
+        total_pixels: 0,
+      },
+    }),
+    getFileMetadata: vi.fn().mockResolvedValue({
+      status: 'ok',
+      data: {
+        make: null,
+        model: null,
+        lens: null,
+        iso: null,
+        shutter_speed: null,
+        aperture: null,
+        focal_length: null,
+        date_time: null,
+      },
+    }),
   },
   unwrapResult: vi.fn((result: { status: string; data?: unknown }) => {
     if (result.status === 'ok') return result.data

@@ -21,6 +21,23 @@ pub fn render_grayscale_pixel(brightness: u8) -> [u8; 4] {
     [brightness, brightness, brightness, 255]
 }
 
+/// Render a channel isolation pixel.
+/// Shows the specified channel's photosites in their color, others as black.
+#[inline]
+pub fn render_channel_pixel(
+    channel: CfaChannel,
+    brightness: u8,
+    target_channel: &CfaChannel,
+) -> [u8; 4] {
+    if std::mem::discriminant(&channel) == std::mem::discriminant(target_channel) {
+        // Matching channel — render in its color
+        render_bayer_pixel(channel, brightness)
+    } else {
+        // Non-matching — black
+        [0, 0, 0, 255]
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

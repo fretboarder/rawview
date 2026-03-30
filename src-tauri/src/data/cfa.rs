@@ -1,10 +1,10 @@
 //! CFA (Color Filter Array) pattern types.
 
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use specta::Type;
 
 /// The CFA pattern of the sensor.
-#[derive(Debug, Clone, Serialize, Type)]
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
 #[serde(tag = "type")]
 pub enum CfaPattern {
     /// Standard 2×2 Bayer pattern
@@ -15,7 +15,7 @@ pub enum CfaPattern {
 
 /// Standard 2×2 Bayer pattern variants.
 /// Named by the top-left 2×2 arrangement.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Type)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Type)]
 pub enum BayerPattern {
     /// R G / G B
     Rggb,
@@ -28,7 +28,7 @@ pub enum BayerPattern {
 }
 
 /// Individual CFA channel identity.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Type)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Type)]
 pub enum CfaChannel {
     R,
     G1,

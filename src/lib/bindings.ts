@@ -71,6 +71,29 @@ async getPhotositeInfo(row: number, col: number) : Promise<Result<PhotositeInfo,
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
 }
+},
+/**
+ * Get histogram data for the current session.
+ * Optionally filter to a specific channel.
+ */
+async getHistogram(channel?: string | null) : Promise<Result<HistogramData, RawViewError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("get_histogram", { channel: channel ?? null }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Get EXIF metadata for the current session.
+ */
+async getFileMetadata() : Promise<Result<ExifData, RawViewError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("get_file_metadata") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
 }
 }
 
@@ -183,6 +206,31 @@ export type RecoveryError =
  * Information sent to the frontend after opening a file.
  */
 export type SessionInfo = { session_id: string; filename: string; width: number; height: number; cfa_pattern: CfaPattern; bit_depth: number; black_level: number; white_level: number; iso: number }
+
+/**
+ * Histogram data — 256 bins per channel.
+ */
+export type HistogramData = {
+  r: number[]
+  g1: number[]
+  g2: number[]
+  b: number[]
+  total_pixels: number
+}
+
+/**
+ * EXIF metadata for the opened file.
+ */
+export type ExifData = {
+  make: string | null
+  model: string | null
+  lens: string | null
+  iso: number | null
+  shutter_speed: string | null
+  aperture: string | null
+  focal_length: string | null
+  date_time: string | null
+}
 
 /** tauri-specta globals **/
 

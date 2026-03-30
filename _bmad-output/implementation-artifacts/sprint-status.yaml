@@ -61,24 +61,24 @@ development_status:
   epic-2-retrospective: optional
 
   # Epic 3: Visualization Modes & Channel Separation
-  epic-3: backlog
-  3-1-grayscale-visualization-mode: backlog
-  3-2-individual-channel-isolation-views: backlog
-  3-3-mode-switching-toolbar-integration-and-keyboard-shortcuts: backlog
+  epic-3: in-progress
+  3-1-grayscale-visualization-mode: review
+  3-2-individual-channel-isolation-views: review
+  3-3-mode-switching-toolbar-integration-and-keyboard-shortcuts: review
   epic-3-retrospective: optional
 
   # Epic 4: Raw Histogram
-  epic-4: backlog
-  4-1-rust-side-histogram-computation: backlog
-  4-2-histogrampanel-react-component: backlog
-  4-3-histogram-panel-toggle-and-toolbar-integration: backlog
+  epic-4: in-progress
+  4-1-rust-side-histogram-computation: review
+  4-2-histogrampanel-react-component: review
+  4-3-histogram-panel-toggle-and-toolbar-integration: review
   epic-4-retrospective: optional
 
   # Epic 5: Metadata, Panels & Keyboard Polish
-  epic-5: backlog
-  5-1-rust-metadata-extraction-and-ipc-command: backlog
-  5-2-metadatapanel-component-and-independent-panel-toggles: backlog
-  5-3-complete-keyboard-shortcut-coverage: backlog
+  epic-5: in-progress
+  5-1-rust-metadata-extraction-and-ipc-command: review
+  5-2-metadatapanel-component-and-independent-panel-toggles: review
+  5-3-complete-keyboard-shortcut-coverage: review
   epic-5-retrospective: optional
 
   # Epic 6: Cross-Platform Release
