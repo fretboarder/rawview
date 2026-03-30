@@ -6,6 +6,8 @@
  * - Scroll wheel zoom (CSS transform for instant feedback, debounced re-render)
  * - Mouse drag pan (CSS transform for instant feedback, re-render on mouseup)
  * - Drag-and-drop file opening via Tauri webview events
+ * - Photosite inspection on hover (debounced to 16ms)
+ * - Click to pin/unpin photosite inspector
  * - Empty/loading states
  */
 
@@ -14,7 +16,13 @@ import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { getCurrentWindow } from '@tauri-apps/api/window'
 import { toast } from 'sonner'
 import { useViewerStore } from '@/store/viewer-store'
+import { useInspectorStore } from '@/store/inspector-store'
 import { buildViewportFitUrl } from '@/lib/protocolUrl'
+import { mapCanvasToSensor } from '@/lib/coordinateMapper'
+import { usePhotositeInfo } from '@/hooks/usePhotositeInfo'
+import { CfaOverlay } from '@/components/viewer/CfaOverlay'
+import { PhotositeInspector } from './PhotositeInspector'
+import { ViewportIndicator } from './ViewportIndicator'
 
 export function ViewerCanvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -38,6 +46,15 @@ export function ViewerCanvas() {
   // Drag state tracked in refs to avoid stale closures without useMemo/useCallback
   const isDragging = useRef(false)
   const dragStart = useRef({ x: 0, y: 0, panX: 0, panY: 0 })
+
+  // Current sensor position under cursor (null when outside sensor or no session)
+  const [sensorPos, setSensorPos] = useState<{ row: number; col: number } | null>(null)
+
+  // Cursor position relative to container for tooltip placement
+  const [cursorPos, setCursorPos] = useState({ x: 0, y: 0 })
+
+  // Feed sensor position to the photosite info hook (debounced IPC)
+  usePhotositeInfo(sensorPos?.row ?? null, sensorPos?.col ?? null)
 
   // Show error toasts when errorMessage changes
   useEffect(() => {
@@ -140,13 +157,48 @@ export function ViewerCanvas() {
   }
 
   const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!isDragging.current) return
-    const dx = e.clientX - dragStart.current.x
-    const dy = e.clientY - dragStart.current.y
-    useViewerStore.getState().setPan(
-      dragStart.current.panX + dx,
-      dragStart.current.panY + dy
-    )
+    if (isDragging.current) {
+      const dx = e.clientX - dragStart.current.x
+      const dy = e.clientY - dragStart.current.y
+      useViewerStore.getState().setPan(
+        dragStart.current.panX + dx,
+        dragStart.current.panY + dy
+      )
+    }
+
+    // Update cursor position for tooltip placement (relative to container)
+    const container = containerRef.current
+    if (container) {
+      const rect = container.getBoundingClientRect()
+      setCursorPos({ x: e.clientX - rect.left, y: e.clientY - rect.top })
+    }
+
+    // Map canvas position to sensor coordinates
+    const canvas = canvasRef.current
+    if (canvas) {
+      const rect = canvas.getBoundingClientRect()
+      const canvasX = e.clientX - rect.left
+      const canvasY = e.clientY - rect.top
+
+      const currentSession = useViewerStore.getState().session
+      if (currentSession) {
+        const currentZoom = useViewerStore.getState().zoom
+        const currentPanX = useViewerStore.getState().panX
+        const currentPanY = useViewerStore.getState().panY
+        const pos = mapCanvasToSensor(
+          canvasX,
+          canvasY,
+          canvasSize.width,
+          canvasSize.height,
+          currentSession.width,
+          currentSession.height,
+          currentZoom,
+          currentPanX,
+          currentPanY
+        )
+        setSensorPos(pos)
+      }
+    }
   }
 
   const handleMouseUp = () => {
@@ -169,6 +221,22 @@ export function ViewerCanvas() {
   const handleMouseLeave = () => {
     if (isDragging.current) {
       handleMouseUp()
+    }
+    // Clear hover state when cursor leaves canvas
+    setSensorPos(null)
+    useInspectorStore.getState().setHovered(null)
+  }
+
+  // Click to pin/unpin the inspector
+  const handleClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (e.button !== 0) return
+    const inspectorState = useInspectorStore.getState()
+    if (inspectorState.pinned) {
+      // Already pinned — unpin
+      inspectorState.clearPinned()
+    } else if (inspectorState.hovered) {
+      // Pin current hovered info
+      inspectorState.setPinned(inspectorState.hovered)
     }
   }
 
@@ -228,15 +296,27 @@ export function ViewerCanvas() {
           width={canvasSize.width}
           height={canvasSize.height}
           style={transformStyle}
-          className="cursor-grab active:cursor-grabbing"
+          className="cursor-crosshair active:cursor-grabbing"
           onWheel={handleWheel}
           onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
           onMouseLeave={handleMouseLeave}
+          onClick={handleClick}
           aria-label="Raw image canvas"
         />
       )}
+
+      {/* CFA pattern overlay (shown when ready) */}
+      {status === 'ready' && <CfaOverlay />}
+
+      {/* Photosite inspector overlay — tooltip near cursor or pinned in corner */}
+      {status === 'ready' && (
+        <PhotositeInspector cursorX={cursorPos.x} cursorY={cursorPos.y} />
+      )}
+
+      {/* Viewport position indicator — minimap in bottom-right corner */}
+      {status === 'ready' && <ViewportIndicator />}
     </div>
   )
 }

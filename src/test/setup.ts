@@ -102,6 +102,10 @@ vi.mock('@/lib/tauri-bindings', () => ({
       .fn()
       .mockResolvedValue({ status: 'ok', data: 0 }),
     openFile: vi.fn().mockResolvedValue({ status: 'ok', data: null }),
+    getPhotositeInfo: vi.fn().mockResolvedValue({
+      status: 'ok',
+      data: { channel: 'R', value: 1024, row: 0, col: 0 },
+    }),
   },
   unwrapResult: vi.fn((result: { status: string; data?: unknown }) => {
     if (result.status === 'ok') return result.data

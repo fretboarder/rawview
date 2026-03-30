@@ -57,6 +57,20 @@ async openFile(path: string) : Promise<Result<SessionInfo, RawViewError>> {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
 }
+},
+/**
+ * Get photosite information at a specific sensor coordinate.
+ * 
+ * Returns the CFA channel identity, raw u16 value, and position.
+ * Values are always the unmodified raw sensor values (NFR8).
+ */
+async getPhotositeInfo(row: number, col: number) : Promise<Result<PhotositeInfo, RawViewError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("get_photosite_info", { row, col }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
 }
 }
 
@@ -92,6 +106,10 @@ export type BayerPattern =
  */
 "Gbrg"
 /**
+ * Individual CFA channel identity.
+ */
+export type CfaChannel = "R" | "G1" | "G2" | "B"
+/**
  * The CFA pattern of the sensor.
  */
 export type CfaPattern = 
@@ -104,6 +122,10 @@ export type CfaPattern =
  */
 { type: "XTrans"; grid: [([number, number, number, number, number, number]), ([number, number, number, number, number, number]), ([number, number, number, number, number, number]), ([number, number, number, number, number, number]), ([number, number, number, number, number, number]), ([number, number, number, number, number, number])] }
 export type JsonValue = null | boolean | number | string | JsonValue[] | Partial<{ [key in string]: JsonValue }>
+/**
+ * Information about a single photosite.
+ */
+export type PhotositeInfo = { channel: CfaChannel; value: number; row: number; col: number }
 /**
  * Application error enum covering all failure modes.
  * Maps to FR6 categorized error taxonomy.

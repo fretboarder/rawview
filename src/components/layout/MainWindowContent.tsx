@@ -1,6 +1,7 @@
 import { cn } from '@/lib/utils'
 import { ViewerCanvas } from '@/components/viewer/ViewerCanvas'
 import { Toolbar } from '@/components/toolbar/Toolbar'
+import { QuickStatsBar } from '@/components/panels/QuickStatsBar'
 
 interface MainWindowContentProps {
   children?: React.ReactNode
@@ -19,6 +20,7 @@ export function MainWindowContent({
           <div className="flex flex-1 overflow-hidden">
             <ViewerCanvas />
           </div>
+          <QuickStatsBar />
         </>
       )}
     </div>

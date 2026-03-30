@@ -55,9 +55,9 @@ development_status:
   2-1-raw-file-decoder-and-bayer-data-store: review
   2-2-viewport-renderer-and-custom-uri-protocol-integration: review
   2-3-canvas-display-zoom-pan-and-file-open-ui: review
-  2-4-photosite-inspector-and-viewport-position-indicator: backlog
-  2-5-quick-stats-bar-and-cfa-pattern-overlay: backlog
-  2-6-error-handling-for-unsupported-corrupt-and-inaccessible-files: backlog
+  2-4-photosite-inspector-and-viewport-position-indicator: review
+  2-5-quick-stats-bar-and-cfa-pattern-overlay: review
+  2-6-error-handling-for-unsupported-corrupt-and-inaccessible-files: review
   epic-2-retrospective: optional
 
   # Epic 3: Visualization Modes & Channel Separation
