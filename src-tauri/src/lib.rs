@@ -10,6 +10,7 @@ pub mod data;
 pub mod decoder;
 pub mod error;
 mod protocol;
+pub mod render;
 pub mod session;
 mod types;
 mod utils;

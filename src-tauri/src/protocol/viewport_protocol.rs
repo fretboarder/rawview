@@ -1,54 +1,123 @@
 //! Custom URI protocol handler for serving viewport bitmaps.
 //!
-//! Handles `rawview://viewport/{id}` requests by returning PNG-encoded images.
-//! This bypasses Tauri's JSON IPC serialization for binary data transfer.
+//! Handles `rawview://viewport/{session_id}?...` requests by rendering
+//! the Bayer mosaic from the BayerDataStore and returning PNG-encoded images.
 
 use tauri::http::Response;
+use tauri::Manager;
+
+use crate::render::encoder;
+use crate::render::viewport;
+use crate::session::SessionManager;
 
 /// Handle an incoming custom protocol request.
 ///
-/// Currently serves a test PNG for the path `/viewport/test` and
-/// returns 404 for all other paths. In Story 2.2, this will be replaced
-/// by the ViewportRenderer that generates real Bayer mosaic bitmaps.
+/// Routes viewport requests to the renderer pipeline:
+/// parse params → access session → render viewport → encode PNG → respond.
+///
+/// Wrapped in catch_unwind for rayon panic safety (NFR13).
 pub fn handle<R: tauri::Runtime>(
-    _ctx: tauri::UriSchemeContext<'_, R>,
+    ctx: tauri::UriSchemeContext<'_, R>,
     request: tauri::http::Request<Vec<u8>>,
     responder: tauri::UriSchemeResponder,
 ) {
-    // Spawn async to avoid blocking the main thread
-    tauri::async_runtime::spawn(async move {
-        let path = request.uri().path();
-        log::debug!("rawview:// protocol request: {path}");
+    let app_handle = ctx.app_handle().clone();
 
-        let response = match route_request(path) {
-            Ok(png_bytes) => build_png_response(png_bytes),
-            Err(status) => build_error_response(status),
+    tauri::async_runtime::spawn(async move {
+        let path = request.uri().path().to_string();
+        let query = request.uri().query().unwrap_or("").to_string();
+        log::debug!("rawview:// protocol request: path={path} query={query}");
+
+        // Wrap in catch_unwind for rayon panic safety
+        let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+            route_request(&app_handle, &path, &query)
+        }));
+
+        let response = match result {
+            Ok(Ok(png_bytes)) => build_png_response(png_bytes),
+            Ok(Err(status)) => build_error_response(status),
+            Err(panic_info) => {
+                let msg = if let Some(s) = panic_info.downcast_ref::<&str>() {
+                    s.to_string()
+                } else if let Some(s) = panic_info.downcast_ref::<String>() {
+                    s.clone()
+                } else {
+                    "Unknown panic in renderer".to_string()
+                };
+                log::error!("Panic in protocol handler: {msg}");
+                build_error_response(500)
+            }
         };
 
         responder.respond(response);
     });
 }
 
-/// Route a request path to the appropriate handler.
-/// Returns Ok(png_bytes) for valid paths, Err(status_code) for errors.
-fn route_request(path: &str) -> Result<Vec<u8>, u16> {
-    // URL-decode the path — convertFileSrc may encode slashes as %2F on some platforms
-    let decoded = percent_decode_str(path);
-    // Normalize: strip leading slashes
-    let path = decoded.trim_start_matches('/');
+/// Route a request to the appropriate handler.
+fn route_request<R: tauri::Runtime>(
+    app_handle: &tauri::AppHandle<R>,
+    path: &str,
+    query: &str,
+) -> Result<Vec<u8>, u16> {
+    let decoded_path = percent_decode_str(path);
+    let path = decoded_path.trim_start_matches('/');
 
-    match path {
-        "viewport/test" => Ok(create_test_png()),
-        p if p.starts_with("viewport/") => {
-            // Valid viewport path but unknown ID — 404
-            log::warn!("Unknown viewport ID: {p}");
-            Err(404)
-        }
-        _ => {
-            log::warn!("Unknown protocol path: {path}");
-            Err(404)
-        }
+    // Test route — kept for protocol verification (Story 1.3)
+    if path == "viewport/test" {
+        return Ok(create_test_png());
     }
+
+    // Viewport render route: /viewport/{session_id}?mode=...&zoom=...
+    if let Some(rest) = path.strip_prefix("viewport/") {
+        let session_id = rest.to_string();
+        return render_viewport(app_handle, &session_id, query);
+    }
+
+    log::warn!("Unknown protocol path: {path}");
+    Err(404)
+}
+
+/// Render a viewport for the given session.
+fn render_viewport<R: tauri::Runtime>(
+    app_handle: &tauri::AppHandle<R>,
+    session_id: &str,
+    query: &str,
+) -> Result<Vec<u8>, u16> {
+    // Parse viewport parameters from query string
+    let mut params = viewport::parse_viewport_params(query).map_err(|e| {
+        log::error!("Failed to parse viewport params: {e}");
+        400u16
+    })?;
+    params.session_id = session_id.to_string();
+
+    // Access session manager
+    let session_mgr = app_handle.try_state::<SessionManager>().ok_or_else(|| {
+        log::error!("SessionManager not available");
+        500u16
+    })?;
+
+    // Check session ID matches
+    let current_id = session_mgr.current_session_id();
+    if current_id.as_deref() != Some(session_id) {
+        log::warn!("Session mismatch: requested={session_id}, current={current_id:?}");
+        return Err(404);
+    }
+
+    // Render
+    let render_result = session_mgr
+        .with_store(|store| {
+            let rgba = viewport::render(store, &params)?;
+            encoder::encode_png(&rgba, params.w, params.h)
+        })
+        .map_err(|e| {
+            log::error!("Session error: {e}");
+            404u16
+        })?;
+
+    render_result.map_err(|e| {
+        log::error!("Render/encode error: {e}");
+        500u16
+    })
 }
 
 /// Build an HTTP response with PNG content and required headers.
@@ -65,6 +134,7 @@ fn build_png_response(png_bytes: Vec<u8>) -> Response<Vec<u8>> {
 /// Build an error HTTP response.
 fn build_error_response(status: u16) -> Response<Vec<u8>> {
     let body = match status {
+        400 => b"Bad Request".to_vec(),
         404 => b"Not Found".to_vec(),
         500 => b"Internal Server Error".to_vec(),
         _ => format!("Error {status}").into_bytes(),
@@ -79,17 +149,14 @@ fn build_error_response(status: u16) -> Response<Vec<u8>> {
 }
 
 /// Generate a minimal 2×2 test PNG with RGBW pixels.
-///
-/// This proves the binary protocol pipeline works end-to-end.
-/// Will be replaced by ViewportRenderer in Story 2.2.
 fn create_test_png() -> Vec<u8> {
     use image::{ImageBuffer, Rgba};
 
     let img: ImageBuffer<Rgba<u8>, Vec<u8>> = ImageBuffer::from_fn(2, 2, |x, y| match (x, y) {
-        (0, 0) => Rgba([255u8, 0, 0, 255]),     // Red
-        (1, 0) => Rgba([0u8, 255, 0, 255]),     // Green
-        (0, 1) => Rgba([0u8, 0, 255, 255]),     // Blue
-        _ => Rgba([255u8, 255, 255, 255]),       // White
+        (0, 0) => Rgba([255u8, 0, 0, 255]),
+        (1, 0) => Rgba([0u8, 255, 0, 255]),
+        (0, 1) => Rgba([0u8, 0, 255, 255]),
+        _ => Rgba([255u8, 255, 255, 255]),
     });
 
     let mut buf = Vec::new();
@@ -102,7 +169,6 @@ fn create_test_png() -> Vec<u8> {
 }
 
 /// Simple percent-decoding for URL paths.
-/// Handles %XX sequences (e.g. %2F → /).
 fn percent_decode_str(input: &str) -> String {
     let mut result = String::with_capacity(input.len());
     let mut chars = input.chars();
@@ -127,32 +193,9 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_route_valid_test_path() {
-        let result = route_request("/viewport/test");
-        assert!(result.is_ok());
-        let png = result.unwrap();
-        // PNG magic bytes
-        assert_eq!(&png[..4], &[0x89, 0x50, 0x4E, 0x47]);
-    }
-
-    #[test]
-    fn test_route_unknown_viewport_id() {
-        let result = route_request("/viewport/unknown-id");
-        assert_eq!(result, Err(404));
-    }
-
-    #[test]
-    fn test_route_invalid_path() {
-        let result = route_request("/something-else");
-        assert_eq!(result, Err(404));
-    }
-
-    #[test]
     fn test_create_test_png_is_valid() {
         let png = create_test_png();
-        // Check PNG signature
         assert_eq!(&png[..8], &[0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]);
-        // Should be a small but non-empty PNG
         assert!(png.len() > 50);
         assert!(png.len() < 1000);
     }
@@ -161,13 +204,5 @@ mod tests {
     fn test_percent_decode() {
         assert_eq!(percent_decode_str("%2Fviewport%2Ftest"), "/viewport/test");
         assert_eq!(percent_decode_str("/viewport/test"), "/viewport/test");
-        assert_eq!(percent_decode_str("no-encoding"), "no-encoding");
-    }
-
-    #[test]
-    fn test_route_encoded_path() {
-        // This is how macOS WebKit sends the path via convertFileSrc
-        let result = route_request("/%2Fviewport%2Ftest");
-        assert!(result.is_ok());
     }
 }

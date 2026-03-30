@@ -43,6 +43,20 @@ async cleanupOldRecoveryFiles() : Promise<Result<number, RecoveryError>> {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
 }
+},
+/**
+ * Open a raw file and create a new session.
+ * 
+ * Decodes the file via LibRaw, creates a BayerDataStore,
+ * and returns SessionInfo to the frontend.
+ */
+async openFile(path: string) : Promise<Result<SessionInfo, RawViewError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("open_file", { path }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
 }
 }
 
@@ -56,7 +70,69 @@ async cleanupOldRecoveryFiles() : Promise<Result<number, RecoveryError>> {
 
 /** user-defined types **/
 
+/**
+ * Standard 2×2 Bayer pattern variants.
+ * Named by the top-left 2×2 arrangement.
+ */
+export type BayerPattern = 
+/**
+ * R G / G B
+ */
+"Rggb" | 
+/**
+ * B G / G R
+ */
+"Bggr" | 
+/**
+ * G R / B G
+ */
+"Grbg" | 
+/**
+ * G B / R G
+ */
+"Gbrg"
+/**
+ * The CFA pattern of the sensor.
+ */
+export type CfaPattern = 
+/**
+ * Standard 2×2 Bayer pattern
+ */
+{ type: "Bayer"; pattern: BayerPattern } | 
+/**
+ * Fuji X-Trans 6×6 pattern
+ */
+{ type: "XTrans"; grid: [([number, number, number, number, number, number]), ([number, number, number, number, number, number]), ([number, number, number, number, number, number]), ([number, number, number, number, number, number]), ([number, number, number, number, number, number]), ([number, number, number, number, number, number])] }
 export type JsonValue = null | boolean | number | string | JsonValue[] | Partial<{ [key in string]: JsonValue }>
+/**
+ * Application error enum covering all failure modes.
+ * Maps to FR6 categorized error taxonomy.
+ */
+export type RawViewError = 
+/**
+ * File format not recognized by LibRaw
+ */
+{ type: "UnsupportedFormat"; extension: string } | 
+/**
+ * File exists but contains corrupt or unreadable raw data
+ */
+{ type: "CorruptData"; detail: string } | 
+/**
+ * File cannot be read (permissions, not found, etc.)
+ */
+{ type: "FileAccessDenied"; path: string } | 
+/**
+ * LibRaw decoder returned an error
+ */
+{ type: "DecoderError"; source: string } | 
+/**
+ * Viewport rendering failed
+ */
+{ type: "RenderError"; detail: string } | 
+/**
+ * Referenced session no longer exists
+ */
+{ type: "SessionExpired"; session_id: string }
 /**
  * Error types for recovery operations (typed for frontend matching)
  */
@@ -81,6 +157,10 @@ export type RecoveryError =
  * JSON serialization/deserialization error
  */
 { type: "ParseError"; message: string }
+/**
+ * Information sent to the frontend after opening a file.
+ */
+export type SessionInfo = { session_id: string; filename: string; width: number; height: number; cfa_pattern: CfaPattern; bit_depth: number; black_level: number; white_level: number; iso: number }
 
 /** tauri-specta globals **/
 
