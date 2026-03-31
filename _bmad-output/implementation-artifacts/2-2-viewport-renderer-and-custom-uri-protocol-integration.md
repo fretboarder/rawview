@@ -1,6 +1,6 @@
 # Story 2.2: Viewport Renderer and Custom URI Protocol Integration
 
-Status: review
+Status: done
 
 ## Story
 
@@ -202,3 +202,21 @@ src-tauri/src/render/
 ### Completion Notes List
 
 ### File List
+
+### Review Findings
+
+**Date**: 2026-03-31
+**Reviewer**: AI Code Review (3-layer parallel)
+
+#### Patched
+- **P2-2-A (HIGH)**: Same `compute_stretch_range` sentinel bug as P2-1-B — fixed with `found_low` flag [src-tauri/src/render/scaling.rs:74]
+- **P2-2-B (MEDIUM)**: `build_png_response` and `build_error_response` use `.expect()` outside `catch_unwind`, allowing panics after the safety boundary. Fixed: replaced with `.unwrap_or_else(|_| Response::new(Vec::new()))` [src-tauri/src/protocol/viewport_protocol.rs:137,154]
+- **P2-2-C (MEDIUM)**: `ZoomLevel::Scale(0.0)`, negative, NaN, and infinity not rejected during param parse. Fixed: added `z.is_finite() && z > 0.0` guard [src-tauri/src/render/viewport.rs:83]
+
+#### Deferred
+- **D2-2-E (MEDIUM)**: `percent_decode_str` corrupts multi-byte UTF-8 — casts each decoded byte to char independently; breaks non-ASCII paths [src-tauri/src/protocol/viewport_protocol.rs:84] (already tracked from Story 1-3)
+- **D2-2-F (MEDIUM)**: TOCTOU session ID check — same as D2-1-D [src-tauri/src/protocol/viewport_protocol.rs:106-121]
+
+#### Dismissed
+- AC4 (auto-stretch "actual min to max") — implementation uses percentile-based range which is superior and intentional
+- AC8 partial gap — catch_unwind now covers the full response path after P2-2-B fix

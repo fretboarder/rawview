@@ -38,6 +38,13 @@ fn main() {
 
     // Collect all .cpp source files recursively
     let cpp_files = collect_cpp_files(&src_dir);
+    if cpp_files.is_empty() {
+        panic!(
+            "No .cpp files found under {}. Is the LibRaw vendor directory present? \
+             Expected vendored source at src-tauri/crates/rawview-libraw-sys/vendor/libraw/src/",
+            src_dir.display()
+        );
+    }
     for file in &cpp_files {
         build.file(file);
     }

@@ -1,6 +1,6 @@
 # Story 1.1: Scaffold Project from Starter Template
 
-Status: review
+Status: done
 
 ## Story
 
@@ -262,3 +262,20 @@ None
 
 **New files (created):**
 - `src-tauri/crates/.gitkeep`
+
+### Review Findings
+
+- [x] [Review][Patch] Unvalidated localStorage theme cast — ThemeProvider reads `localStorage.getItem(storageKey) as Theme` without validating against valid Theme values; corrupted values cause sticky wrong-theme behavior [src/components/ThemeProvider.tsx:17] — **fixed**: added explicit validation against allowed values
+- [x] [Review][Patch] localStorage.setItem can throw unhandled — `setTheme` callback calls `localStorage.setItem` without try/catch; QuotaExceededError or SecurityError will crash the component [src/components/ThemeProvider.tsx:43] — **fixed**: wrapped in try/catch
+- [x] [Review][Patch] `react-day-picker` stale entry in knip.json — dependency was removed from package.json but its ignore entry was left in knip.json, suppressing dead-code detection [knip.json:16] — **fixed**: removed entry
+- [x] [Review][Defer] CSP `unsafe-inline` in script-src — allows inline script execution in the WebView, potential XSS vector when rendering untrusted file metadata [src-tauri/tauri.conf.json:34] — deferred, template default; revisit when EXIF/metadata rendering is implemented
+- [x] [Review][Defer] `recovery.rs` TOCTOU on file existence check — `.exists()` then `read_to_string` is a race condition; should match on read error kind instead [src-tauri/src/commands/recovery.rs:99-102] — deferred, pre-existing template code
+- [x] [Review][Defer] `recovery.rs` u64 underflow on cleanup timestamp — `now - 604800` can overflow if system clock is near epoch [src-tauri/src/commands/recovery.rs:139] — deferred, pre-existing template code
+- [x] [Review][Defer] `recovery.rs` pre-epoch clock aborts cleanup entirely [src-tauri/src/commands/recovery.rs:133-139] — deferred, pre-existing
+- [x] [Review][Defer] `recovery.rs` concurrent saves share same .tmp path — two concurrent saves could collide [src-tauri/src/commands/recovery.rs:62-63] — deferred, pre-existing
+- [x] [Review][Defer] `recovery.ts` crash filename millisecond collision — two crashes in same ms overwrite each other [src/lib/recovery.ts:172-173] — deferred, pre-existing
+- [x] [Review][Defer] Command registry silent duplicate overwrites — no warning on duplicate command IDs [src/lib/commands/registry.ts:3] — deferred, template pattern
+- [x] [Review][Defer] App.tsx double-init in React Strict Mode — initializeCommandSystem and buildAppMenu called twice in dev [src/App.tsx:16-43] — deferred, dev-only
+- [x] [Review][Defer] `img-src` allows any HTTPS origin — potential exfiltration channel [src-tauri/tauri.conf.json:34] — deferred, revisit with metadata display
+- [x] [Review][Defer] Filename regex validates name only, not resolved path — validate final path is within expected directory [src-tauri/src/types.rs:13-16] — deferred, pre-existing
+- [x] [Review][Defer] Window state not saved on Windows/Linux CloseRequested — only macOS explicitly saves [src-tauri/src/lib.rs:111-124] — deferred, template pattern

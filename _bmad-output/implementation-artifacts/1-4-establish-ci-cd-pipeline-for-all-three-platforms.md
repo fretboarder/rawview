@@ -1,6 +1,6 @@
 # Story 1.4: Establish CI/CD Pipeline for All Three Platforms
 
-Status: review
+Status: done
 
 ## Story
 
@@ -151,6 +151,31 @@ The `cc` crate compiles LibRaw using the platform's native C++ compiler:
 - [Source: _bmad-output/planning-artifacts/epics.md#Story 1.4]
 - [Source: https://v2.tauri.app/distribute/pipelines/github]
 - [Source: https://github.com/tauri-apps/tauri-action]
+
+## Review Findings
+
+**Review date**: 2026-03-31
+**Verdict**: ✅ APPROVED — all 8 ACs met
+
+### Patches Applied (1)
+- **BH-1** (medium): Quoted `${{ matrix.bundle_args }}` in ci.yml:74 to prevent shell injection via unquoted variable expansion
+
+### Deferred (4)
+- EC-1: macOS ARM64 only — no Intel Mac / Universal Binary support
+- EC-3: rust-cache key doesn't include vendored LibRaw source hash — stale cache possible
+- EC-5: `lts/*` is floating Node version — minor reproducibility concern
+- EC-6: workflow_dispatch could create duplicate release tag if branch name matches existing tag
+
+### Dismissed (9)
+- BH-2: `ref_name || inputs.version` fallback works correctly for both trigger types
+- BH-3: Concurrency cancellation is intentional CI pattern
+- BH-4: `strip="symbols"` is correct for release builds without crash reporting
+- EC-2: Already deferred in story 1-2 (host vs target OS in build.rs)
+- EC-4: `npm test -- --run` works on all modern npm versions; verified locally
+- EC-7: `tauri-action@v0` is intentionally pinned to stable major series
+- EC-8: upload-artifact produces warning on empty glob, doesn't fail
+- EC-9: No crash reporter planned; stripped symbols are acceptable
+- EC-10: Same as BH-3 — concurrency group is intentional
 
 ## Dev Agent Record
 

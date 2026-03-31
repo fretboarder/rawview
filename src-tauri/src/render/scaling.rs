@@ -68,11 +68,13 @@ pub fn compute_stretch_range(data: &[u16]) -> (u16, u16) {
     let mut low = 0u16;
     let mut high = 65535u16;
     let mut cumulative = 0u32;
+    let mut found_low = false;
 
     for (val, &count) in hist.iter().enumerate() {
         cumulative += count;
-        if cumulative >= low_cutoff && low == 0 {
+        if cumulative >= low_cutoff && !found_low {
             low = val as u16;
+            found_low = true;
         }
         if cumulative >= high_cutoff {
             high = val as u16;

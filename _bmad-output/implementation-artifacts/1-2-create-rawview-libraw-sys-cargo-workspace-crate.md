@@ -1,6 +1,6 @@
 # Story 1.2: Create rawview-libraw-sys Cargo Workspace Crate
 
-Status: review
+Status: done
 
 ## Story
 
@@ -207,3 +207,10 @@ src-tauri/
 ### Completion Notes List
 
 ### File List
+
+### Review Findings
+
+- [x] [Review][Patch] Unused `glob` build-dependency — `glob = "0.3"` declared in Cargo.toml but never imported; `collect_cpp_files` uses `std::fs::read_dir` instead. Dead dependency with supply-chain surface. [Cargo.toml:10] — **fixed**: removed `glob` from build-dependencies
+- [x] [Review][Patch] Silent empty file list if vendor dir missing — `collect_cpp_files` silently returns empty Vec on read_dir failure; `cc::Build::compile` then produces an empty archive with undefined symbols, causing confusing linker errors later. [build.rs:40] — **fixed**: added `is_empty()` guard with panic and actionable error message
+- [x] [Review][Defer] `cfg!(target_os = "linux")` checks host OS, not target — `-fPIC` flag controlled by host OS instead of `CARGO_CFG_TARGET_OS`; breaks Linux cross-compilation [build.rs:22] — deferred, CI builds natively per-platform
+- [x] [Review][Defer] `rerun-if-changed` on directories is shallow — Cargo only watches direct children of `vendor/libraw/src`, not recursive changes; stale incremental builds possible if vendored source is patched [build.rs:67-68] — deferred, vendored source is committed and stable

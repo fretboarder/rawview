@@ -13,9 +13,13 @@ export function ThemeProvider({
   storageKey = 'ui-theme',
   ...props
 }: ThemeProviderProps) {
-  const [theme, setTheme] = useState<Theme>(
-    () => (localStorage.getItem(storageKey) as Theme) || defaultTheme
-  )
+  const [theme, setTheme] = useState<Theme>(() => {
+    const stored = localStorage.getItem(storageKey)
+    if (stored === 'dark' || stored === 'light' || stored === 'system') {
+      return stored
+    }
+    return defaultTheme
+  })
 
   useEffect(() => {
     const root = window.document.documentElement
@@ -40,7 +44,11 @@ export function ThemeProvider({
   const value = {
     theme,
     setTheme: (newTheme: Theme) => {
-      localStorage.setItem(storageKey, newTheme)
+      try {
+        localStorage.setItem(storageKey, newTheme)
+      } catch {
+        // QuotaExceededError or SecurityError — theme still applies in memory
+      }
       setTheme(newTheme)
     },
   }

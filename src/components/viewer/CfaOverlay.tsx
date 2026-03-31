@@ -31,7 +31,7 @@ export function CfaOverlay() {
 
     return (
       <div
-        className="absolute top-3 right-3 z-10 rounded bg-black/60 p-1.5"
+        className="absolute top-3 end-3 z-10 rounded bg-black/60 p-1.5"
         aria-label={`CFA pattern: ${cfa_pattern.pattern.toUpperCase()}`}
       >
         <div className="grid grid-cols-2 gap-px" style={{ width: 52 }}>
@@ -54,7 +54,7 @@ export function CfaOverlay() {
 
   return (
     <div
-      className="absolute top-3 right-3 z-10 rounded bg-black/60 p-1.5"
+      className="absolute top-3 end-3 z-10 rounded bg-black/60 p-1.5"
       aria-label="CFA pattern: X-Trans"
     >
       <div className="grid grid-cols-6 gap-px" style={{ width: 72 }}>

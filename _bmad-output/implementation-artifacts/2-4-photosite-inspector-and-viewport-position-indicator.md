@@ -1,6 +1,6 @@
 # Story 2.4: Photosite Inspector and Viewport Position Indicator
 
-Status: review
+Status: done
 
 ## Story
 
@@ -112,3 +112,23 @@ const usePhotositeInfo = (row: number | null, col: number | null) => {
 - **No useMemo/useCallback** — React Compiler handles it
 - Values must be raw u16 integers — never display transformed values
 - Monospace font for all numerical displays
+
+### Review Findings
+
+**Date**: 2026-03-31
+**Reviewer**: AI Code Review (3-layer parallel)
+
+#### Patched
+(No patches applied — all findings deferred or dismissed)
+
+#### Deferred
+- **S24-1 (MEDIUM)**: `usePhotositeInfo` fires IPC even when inspector is pinned — should skip fetch when `pinned !== null` [src/hooks/usePhotositeInfo.ts]
+- **S24-2 (MEDIUM)**: Click after drag pins inspector unintentionally — `handleClick` fires after mouseup without drag-distance guard [src/components/viewer/ViewerCanvas.tsx:231-241]
+- **S24-3 (LOW)**: ViewportIndicator pan math approximation is slightly off for portrait sensors [src/components/viewer/ViewportIndicator.tsx:156]
+- **S24-4 (LOW)**: Misleading error messages in edge cases
+- **S24-5 (LOW)**: Tooltip can overflow container bounds
+- **S24-6 (LOW)**: `void sensorH` suppresses unused variable warning — dead code smell [src/components/viewer/ViewportIndicator.tsx:171]
+
+#### Dismissed
+- Photosite inspector overall implementation is solid with proper debouncing
+- Pin/unpin toggle works correctly for the standard (non-drag) case

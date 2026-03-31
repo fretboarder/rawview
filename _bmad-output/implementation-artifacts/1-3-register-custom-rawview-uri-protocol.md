@@ -1,6 +1,6 @@
 # Story 1.3: Register Custom rawview:// URI Protocol in Tauri
 
-Status: review
+Status: done
 
 ## Story
 
@@ -199,3 +199,9 @@ src/
 ### Completion Notes List
 
 ### File List
+
+### Review Findings
+
+- [x] [Review][Defer] `percent_decode_str` corrupts multi-byte UTF-8 — casts each decoded byte independently to char instead of collecting bytes first; breaks non-ASCII paths [viewport_protocol.rs:84] — deferred, all current paths are ASCII UUIDs
+- [x] [Review][Defer] `Access-Control-Allow-Origin: *` on custom URI scheme — any WebView content can fetch from rawview:// [viewport_protocol.rs] — deferred, standard Tauri pattern; revisit with CSP hardening
+- [x] [Review][Defer] `sessionId` not URI-encoded in URL path — special characters in session ID could break routing [protocolUrl.ts:41] — deferred, session IDs are UUIDs today

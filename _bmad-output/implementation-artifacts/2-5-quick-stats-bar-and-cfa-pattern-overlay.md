@@ -1,6 +1,6 @@
 # Story 2.5: Quick Stats Bar and CFA Pattern Overlay
 
-Status: review
+Status: done
 
 ## Story
 
@@ -67,3 +67,20 @@ const label = session.cfa_pattern.type === "Bayer" ? session.cfa_pattern.pattern
 - No useMemo/useCallback
 - This is pure frontend — no Rust changes needed
 - Monospace font: use `font-mono` Tailwind class
+
+### Review Findings
+
+**Date**: 2026-03-31
+**Reviewer**: AI Code Review (3-layer parallel)
+
+#### Patched
+- **S25-2 (LOW)**: RTL violation — `right-3` changed to `end-3` in CFA overlay positioning for both Bayer and X-Trans variants [src/components/viewer/CfaOverlay.tsx:34,57]
+
+#### Deferred
+- **S25-1 (MEDIUM)**: `useEffectiveZoom` uses fragile `document.querySelector('[aria-label="Raw image canvas"]')?.parentElement` to find canvas container — should use a shared ref or context [src/components/panels/QuickStatsBar.tsx:17-19]
+- **S25-3 (LOW)**: Placeholder count mismatch — empty state shows 7 placeholders but populated state shows 9 fields
+- **S25-4 (LOW)**: G1/G2 collapse test — no verification that both green channels are correctly labeled
+
+#### Dismissed
+- Stats bar layout and styling meet accessibility requirements
+- CFA overlay correctly renders both Bayer 2×2 and X-Trans 6×6 patterns

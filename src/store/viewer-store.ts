@@ -4,7 +4,13 @@ import { commands } from '@/lib/tauri-bindings'
 import type { SessionInfo } from '@/lib/bindings'
 
 type ViewerStatus = 'idle' | 'loading' | 'ready' | 'error'
-export type ViewerMode = 'bayer' | 'grayscale' | 'channel_r' | 'channel_g1' | 'channel_g2' | 'channel_b'
+export type ViewerMode =
+  | 'bayer'
+  | 'grayscale'
+  | 'channel_r'
+  | 'channel_g1'
+  | 'channel_g2'
+  | 'channel_b'
 
 interface ViewerState {
   status: ViewerStatus
@@ -27,7 +33,7 @@ interface ViewerState {
 
 export const useViewerStore = create<ViewerState>()(
   devtools(
-    (set) => ({
+    set => ({
       status: 'idle',
       session: null,
       zoom: 1,
@@ -51,13 +57,13 @@ export const useViewerStore = create<ViewerState>()(
           let message: string
           switch (err.type) {
             case 'UnsupportedFormat':
-              message = `Unsupported format: ${err.extension}`
+              message = `Unsupported format: .${err.extension}`
               break
             case 'CorruptData':
-              message = `Corrupt file: ${err.detail}`
+              message = `Corrupt or unreadable file data: ${err.detail}`
               break
             case 'FileAccessDenied':
-              message = `Cannot access: ${err.path}`
+              message = `File access denied: ${err.path}`
               break
             case 'DecoderError':
               message = `Decoder error: ${err.source}`
@@ -71,7 +77,11 @@ export const useViewerStore = create<ViewerState>()(
             default:
               message = `Unknown error`
           }
-          set({ status: 'error', errorMessage: message }, false, 'openFile/error')
+          set(
+            { status: 'error', errorMessage: message },
+            false,
+            'openFile/error'
+          )
         }
       },
 
@@ -98,11 +108,7 @@ export const useViewerStore = create<ViewerState>()(
       },
 
       toggleStretch: () => {
-        set(
-          (state) => ({ stretch: !state.stretch }),
-          false,
-          'toggleStretch'
-        )
+        set(state => ({ stretch: !state.stretch }), false, 'toggleStretch')
       },
 
       reset: () => {
@@ -114,7 +120,7 @@ export const useViewerStore = create<ViewerState>()(
             panX: 0,
             panY: 0,
             mode: 'bayer',
-      stretch: true,
+            stretch: false,
             errorMessage: null,
           },
           false,

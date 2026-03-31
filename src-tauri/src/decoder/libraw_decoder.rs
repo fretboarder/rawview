@@ -97,9 +97,10 @@ pub fn decode(path: &str) -> Result<DecodedRaw, RawViewError> {
     let (raw_width, raw_height, width, height, top_margin, left_margin) = get_sizes(lr.as_ptr());
     let raw_pitch = unsafe { rawview_get_raw_pitch(lr.as_ptr()) } as usize;
 
-    // Get CFA pattern
+    // Get CFA pattern — must use active area origin, not sensor origin,
+    // because LibRaw's FC() uses absolute coordinates and doesn't compensate for margins.
     let filters = unsafe { rawview_get_filters(lr.as_ptr()) };
-    let cfa_pattern = detect_cfa_pattern(filters, lr.as_ptr())?;
+    let cfa_pattern = detect_cfa_pattern(filters, lr.as_ptr(), top_margin, left_margin)?;
 
     // Get black/white levels
     let (black_levels, white_level) = get_levels(lr.as_ptr());
@@ -180,9 +181,16 @@ fn get_sizes(lr: *mut libraw_data_t) -> (u16, u16, u16, u16, u16, u16) {
 }
 
 /// Detect CFA pattern from LibRaw filters value.
+///
+/// For standard Bayer sensors (`filters >= 1000`), LibRaw's `FC()` uses absolute
+/// sensor coordinates without compensating for margins. We must probe at the
+/// active area origin `(top_margin, left_margin)` so the detected 2×2 pattern
+/// matches what `channel_at()` will compute for active-area-relative coordinates.
 fn detect_cfa_pattern(
     filters: u32,
     lr: *mut libraw_data_t,
+    top_margin: u16,
+    left_margin: u16,
 ) -> Result<CfaPattern, RawViewError> {
     if filters == 9 {
         // Fuji X-Trans: read 6×6 pattern from iparams
@@ -205,15 +213,20 @@ fn detect_cfa_pattern(
             extension: "non-Bayer sensor (Foveon or similar)".to_string(),
         })
     } else {
-        // Standard Bayer: read first 2×2 color indices
-        let tl = unsafe { libraw_COLOR(lr, 0, 0) };
-        let tr = unsafe { libraw_COLOR(lr, 0, 1) };
-        let bl = unsafe { libraw_COLOR(lr, 1, 0) };
-        let br = unsafe { libraw_COLOR(lr, 1, 1) };
+        // Standard Bayer: probe at active area origin so the detected pattern
+        // aligns with our 0-indexed active-area data. LibRaw's FC() operates
+        // on absolute sensor coords, so passing (0,0) is wrong when margins
+        // are odd — the 2×2 pattern phase-shifts by one pixel.
+        let top = top_margin as i32;
+        let left = left_margin as i32;
+        let tl = unsafe { libraw_COLOR(lr, top, left) };
+        let tr = unsafe { libraw_COLOR(lr, top, left + 1) };
+        let bl = unsafe { libraw_COLOR(lr, top + 1, left) };
+        let br = unsafe { libraw_COLOR(lr, top + 1, left + 1) };
 
         let pattern = bayer_pattern_from_color_indices(tl, tr, bl, br).ok_or_else(|| {
             RawViewError::DecoderError {
-                source: format!("Unknown Bayer pattern: tl={tl} tr={tr} bl={bl} br={br}"),
+                source: format!("Unknown Bayer pattern: tl={tl} tr={tr} bl={bl} br={br} (at margin {top},{left})"),
             }
         })?;
 

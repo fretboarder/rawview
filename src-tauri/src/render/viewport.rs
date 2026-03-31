@@ -80,7 +80,8 @@ pub fn parse_viewport_params(query: &str) -> Result<ViewportParams, RawViewError
                 zoom = if val == "fit" {
                     ZoomLevel::Fit
                 } else {
-                    ZoomLevel::Scale(val.parse().unwrap_or(1.0))
+                    let z: f64 = val.parse().unwrap_or(1.0);
+                    ZoomLevel::Scale(if z.is_finite() && z > 0.0 { z } else { 1.0 })
                 };
             }
             "w" => w = val.parse().unwrap_or(800),

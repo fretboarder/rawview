@@ -134,7 +134,7 @@ fn build_png_response(png_bytes: Vec<u8>) -> Response<Vec<u8>> {
         .header("Access-Control-Allow-Origin", "*")
         .header("Cache-Control", "no-cache")
         .body(png_bytes)
-        .expect("failed to build PNG response")
+        .unwrap_or_else(|_| Response::new(Vec::new()))
 }
 
 /// Build an error HTTP response.
@@ -151,7 +151,7 @@ fn build_error_response(status: u16) -> Response<Vec<u8>> {
         .header("Content-Type", "text/plain")
         .header("Access-Control-Allow-Origin", "*")
         .body(body)
-        .expect("failed to build error response")
+        .unwrap_or_else(|_| Response::new(Vec::new()))
 }
 
 /// Generate a minimal 2×2 test PNG with RGBW pixels.

@@ -1,6 +1,6 @@
 # Story 2.3: Canvas Display, Zoom, Pan, and File Open UI
 
-Status: review
+Status: done
 
 ## Story
 
@@ -283,3 +283,20 @@ src/
 ### Completion Notes List
 
 ### File List
+
+### Review Findings
+
+**Date**: 2026-03-31
+**Reviewer**: AI Code Review (3-layer parallel)
+
+#### Patched
+- **S23-1 (HIGH)**: `stretch` initial value `false` (line 37) but `reset()` sets `true` (line 117) — inconsistent defaults. Fixed: `reset()` now sets `stretch: false` to match initial state [src/store/viewer-store.ts:117]
+
+#### Deferred
+- **S23-2 (LOW)**: `e.preventDefault()` on React synthetic WheelEvent is a no-op when React uses passive listeners — canvas doesn't scroll so low impact [src/components/viewer/ViewerCanvas.tsx:144]
+- **S23-3 (LOW)**: Stale unlisten race in drag-drop cleanup — `.then(fn => fn())` pattern has a small window; standard Tauri pattern [src/components/viewer/ViewerCanvas.tsx:137-139]
+- **S23-4 (LOW)**: Multi-file drop only opens first file silently — no user feedback about skipped files
+- **S23-5 (LOW)**: Canvas default 800×600 before ResizeObserver fires — brief flash of wrong size
+
+#### Dismissed
+- Scroll zoom and drag pan work correctly with the ref-based pattern (no stale closure issue)

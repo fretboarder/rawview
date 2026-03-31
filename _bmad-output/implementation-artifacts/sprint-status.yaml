@@ -1,5 +1,5 @@
 # generated: 2026-03-27
-# last_updated: 2026-03-27
+# last_updated: 2026-03-31
 # project: rawview
 # project_key: NOKEY
 # tracking_system: file-system
@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-03-27
-last_updated: 2026-03-27
+last_updated: 2026-03-31
 project: rawview
 project_key: NOKEY
 tracking_system: file-system
@@ -43,49 +43,49 @@ story_location: _bmad-output/implementation-artifacts
 
 development_status:
   # Epic 1: Project Scaffold & Build Pipeline
-  epic-1: in-progress
-  1-1-scaffold-project-from-starter-template: review
-  1-2-create-rawview-libraw-sys-cargo-workspace-crate: review
-  1-3-register-custom-rawview-uri-protocol: review
-  1-4-establish-ci-cd-pipeline-for-all-three-platforms: review
+  epic-1: done
+  1-1-scaffold-project-from-starter-template: done
+  1-2-create-rawview-libraw-sys-cargo-workspace-crate: done
+  1-3-register-custom-rawview-uri-protocol: done
+  1-4-establish-ci-cd-pipeline-for-all-three-platforms: done
   epic-1-retrospective: optional
 
   # Epic 2: The Revelation Moment (Open, View, Inspect)
-  epic-2: in-progress
-  2-1-raw-file-decoder-and-bayer-data-store: review
-  2-2-viewport-renderer-and-custom-uri-protocol-integration: review
-  2-3-canvas-display-zoom-pan-and-file-open-ui: review
-  2-4-photosite-inspector-and-viewport-position-indicator: review
-  2-5-quick-stats-bar-and-cfa-pattern-overlay: review
-  2-6-error-handling-for-unsupported-corrupt-and-inaccessible-files: review
+  epic-2: done
+  2-1-raw-file-decoder-and-bayer-data-store: done
+  2-2-viewport-renderer-and-custom-uri-protocol-integration: done
+  2-3-canvas-display-zoom-pan-and-file-open-ui: done
+  2-4-photosite-inspector-and-viewport-position-indicator: done
+  2-5-quick-stats-bar-and-cfa-pattern-overlay: done
+  2-6-error-handling-for-unsupported-corrupt-and-inaccessible-files: done
   epic-2-retrospective: optional
 
   # Epic 3: Visualization Modes & Channel Separation
-  epic-3: in-progress
-  3-1-grayscale-visualization-mode: review
-  3-2-individual-channel-isolation-views: review
-  3-3-mode-switching-toolbar-integration-and-keyboard-shortcuts: review
+  epic-3: done
+  3-1-grayscale-visualization-mode: done
+  3-2-individual-channel-isolation-views: done
+  3-3-mode-switching-toolbar-integration-and-keyboard-shortcuts: done
   epic-3-retrospective: optional
 
   # Epic 4: Raw Histogram
-  epic-4: in-progress
-  4-1-rust-side-histogram-computation: review
-  4-2-histogrampanel-react-component: review
-  4-3-histogram-panel-toggle-and-toolbar-integration: review
+  epic-4: done
+  4-1-rust-side-histogram-computation: done
+  4-2-histogrampanel-react-component: done
+  4-3-histogram-panel-toggle-and-toolbar-integration: done
   epic-4-retrospective: optional
 
   # Epic 5: Metadata, Panels & Keyboard Polish
-  epic-5: in-progress
-  5-1-rust-metadata-extraction-and-ipc-command: review
-  5-2-metadatapanel-component-and-independent-panel-toggles: review
-  5-3-complete-keyboard-shortcut-coverage: review
+  epic-5: done
+  5-1-rust-metadata-extraction-and-ipc-command: done
+  5-2-metadatapanel-component-and-independent-panel-toggles: done
+  5-3-complete-keyboard-shortcut-coverage: done
   epic-5-retrospective: optional
 
   # Epic 6: Cross-Platform Release
-  epic-6: in-progress
-  6-1-test-corpus-json-reference-sidecars-and-accuracy-ci: review
-  6-2-github-actions-release-workflow-and-platform-packaging: review
-  6-3-readme-things-we-wont-do-doc-and-launch-readiness: review
+  epic-6: done
+  6-1-test-corpus-json-reference-sidecars-and-accuracy-ci: done
+  6-2-github-actions-release-workflow-and-platform-packaging: done
+  6-3-readme-things-we-wont-do-doc-and-launch-readiness: done
   epic-6-retrospective: optional
 
   # Epic 7: Interactive Analysis — Tier 2

@@ -1,6 +1,6 @@
 # Story 2.1: Raw File Decoder and Bayer Data Store
 
-Status: review
+Status: done
 
 ## Story
 
@@ -285,3 +285,23 @@ src-tauri/crates/rawview-libraw-sys/
 ### Completion Notes List
 
 ### File List
+
+### Review Findings
+
+**Date**: 2026-03-31
+**Reviewer**: AI Code Review (3-layer parallel)
+
+#### Patched
+- **P2-1-B (HIGH)**: `compute_stretch_range` sentinel bug — `low == 0` used as "not yet found" sentinel breaks stretch for images with legitimate zero-value pixels. Fixed: replaced with `found_low: bool` flag [src-tauri/src/render/scaling.rs:74]
+
+#### Deferred
+- **D2-1-D (MEDIUM)**: TOCTOU session ID check — `current_session_id()` and `with_store()` use two separate lock acquisitions, creating a window where session can change between the check and the use [src-tauri/src/protocol/viewport_protocol.rs:106-121]
+- **D2-1-E (MEDIUM)**: AC9 gap — `decoder_tests.rs` doesn't assert specific photosite values at hardcoded coordinates for bit-exact verification
+- **D2-1-F (LOW)**: `raw_pitch % 2` assert would catch odd-stride data from exotic sensors [src-tauri/src/decoder/libraw_decoder.rs]
+- **D2-1-G (LOW)**: File-exists TOCTOU — `.exists()` then open is a race condition in the open_file command
+
+#### Dismissed
+- c_char cast is correct bit-reinterpret for LibRaw FFI
+- X-Trans grid cast is safe (values 0-2 always fit u8)
+- LibRawGuard !Send is intentional (LibRaw is not thread-safe)
+- Duplicate Bayer pattern match arms are exhaustive coverage, not dead code
